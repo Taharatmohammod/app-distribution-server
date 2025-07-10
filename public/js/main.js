@@ -1,400 +1,445 @@
 // Global variables
 let apps = [];
-let filteredApps = [];
+let currentView = 'grid';
 
 // DOM elements
-const navButtons = document.querySelectorAll('.nav-btn');
+const sidebar = document.querySelector('.sidebar');
+const menuToggle = document.querySelector('.menu-toggle');
+const navItems = document.querySelectorAll('.nav-item');
 const tabContents = document.querySelectorAll('.tab-content');
 const appsGrid = document.getElementById('appsGrid');
 const searchInput = document.getElementById('searchInput');
 const uploadForm = document.getElementById('uploadForm');
+const uploadArea = document.getElementById('uploadArea');
+const appFileInput = document.getElementById('appFile');
 const modal = document.getElementById('appModal');
 const modalContent = document.getElementById('modalContent');
+const modalTitle = document.getElementById('modalTitle');
 const closeModal = document.querySelector('.close');
+const viewBtns = document.querySelectorAll('.view-btn');
+const sortSelect = document.getElementById('sortSelect');
 
-// Initialize the application
+// Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
-    initializeTabs();
-    initializeSearch();
-    initializeUpload();
-    initializeModal();
     loadApps();
+    setupEventListeners();
+    setupUploadArea();
 });
 
-// Tab navigation
-function initializeTabs() {
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetTab = button.getAttribute('data-tab');
-            
-            // Update active button
-            navButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            // Show target tab
-            tabContents.forEach(tab => tab.classList.remove('active'));
-            document.getElementById(`${targetTab}-tab`).classList.add('active');
+// Setup event listeners
+function setupEventListeners() {
+    // Navigation
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tab = this.getAttribute('data-tab');
+            switchTab(tab);
         });
     });
-}
 
-// Search functionality
-function initializeSearch() {
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        filterApps(searchTerm);
+    // Mobile menu toggle
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+    }
+
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterApps(this.value);
+        });
+    }
+
+    // View options
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+            switchView(view);
+        });
     });
-}
 
-function filterApps(searchTerm) {
-    filteredApps = apps.filter(app => 
-        app.name.toLowerCase().includes(searchTerm) ||
-        app.description.toLowerCase().includes(searchTerm) ||
-        app.category.toLowerCase().includes(searchTerm)
-    );
-    renderApps(filteredApps);
-}
+    // Sort functionality
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            sortApps(this.value);
+        });
+    }
 
-// Upload functionality
-function initializeUpload() {
-    uploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(uploadForm);
-        
-        try {
-            const response = await fetch('/api/apps', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.ok) {
-                const newApp = await response.json();
-                apps.push(newApp);
-                renderApps(apps);
-                uploadForm.reset();
-                showNotification('App uploaded successfully!', 'success');
-                
-                // Switch to apps tab
-                document.querySelector('[data-tab="apps"]').click();
-            } else {
-                const error = await response.json();
-                showNotification(error.error || 'Upload failed', 'error');
-            }
-        } catch (error) {
-            showNotification('Upload failed. Please try again.', 'error');
-        }
-    });
-}
+    // Modal
+    if (closeModal) {
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
 
-// Modal functionality
-function initializeModal() {
-    // Close modal when clicking X
-    closeModal.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
+    window.addEventListener('click', function(e) {
         if (e.target === modal) {
             modal.style.display = 'none';
         }
     });
-    
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'block') {
-            modal.style.display = 'none';
+
+    // Upload form
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', handleUpload);
+    }
+
+    // Upload area
+    if (uploadArea) {
+        uploadArea.addEventListener('click', function() {
+            appFileInput.click();
+        });
+    }
+
+    // File input change
+    if (appFileInput) {
+        appFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                showUploadForm();
+            }
+        });
+    }
+
+    // Cancel upload
+    const cancelUpload = document.getElementById('cancelUpload');
+    if (cancelUpload) {
+        cancelUpload.addEventListener('click', function() {
+            hideUploadForm();
+        });
+    }
+}
+
+// Setup upload area with drag and drop
+function setupUploadArea() {
+    if (!uploadArea) return;
+
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            appFileInput.files = files;
+            showUploadForm();
         }
     });
 }
 
-// Load apps from server
+// Switch tabs
+function switchTab(tabName) {
+    // Update navigation
+    navItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-tab') === tabName) {
+            item.classList.add('active');
+        }
+    });
+
+    // Update content
+    tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === `${tabName}-tab`) {
+            content.classList.add('active');
+        }
+    });
+
+    // Update breadcrumb
+    const breadcrumb = document.querySelector('.breadcrumb span');
+    if (breadcrumb) {
+        breadcrumb.textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    }
+}
+
+// Switch view (grid/list)
+function switchView(view) {
+    currentView = view;
+    
+    viewBtns.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-view') === view) {
+            btn.classList.add('active');
+        }
+    });
+
+    renderApps();
+}
+
+// Load apps from API
 async function loadApps() {
     try {
         const response = await fetch('/api/apps');
-        if (response.ok) {
-            apps = await response.json();
-            filteredApps = apps;
-            renderApps(apps);
-        } else {
-            showNotification('Failed to load apps', 'error');
-        }
+        apps = await response.json();
+        renderApps();
     } catch (error) {
-        showNotification('Failed to load apps. Please try again.', 'error');
+        console.error('Error loading apps:', error);
+        showMessage('Error loading apps', 'error');
     }
 }
 
 // Render apps in the grid
-function renderApps(appsToRender) {
-    if (appsToRender.length === 0) {
+function renderApps() {
+    if (!appsGrid) return;
+
+    if (apps.length === 0) {
         appsGrid.innerHTML = `
-            <div class="no-apps">
-                <i class="fas fa-search"></i>
-                <h3>No apps found</h3>
-                <p>Try adjusting your search criteria</p>
+            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px;">
+                <i class="fas fa-folder-open"></i>
+                <h3>No apps yet</h3>
+                <p>Upload your first app to get started</p>
             </div>
         `;
         return;
     }
+
+    appsGrid.innerHTML = apps.map(app => createAppCard(app)).join('');
+}
+
+// Create app card
+function createAppCard(app) {
+    const fileType = getFileType(app.downloadUrl);
+    const fileIcon = getFileIcon(fileType);
     
-    appsGrid.innerHTML = appsToRender.map(app => `
-        <div class="app-card" onclick="showAppDetails(${app.id})">
-            <div class="app-header">
-                <div class="app-info">
-                    <h3>${escapeHtml(app.name)}</h3>
-                    <span class="version">v${escapeHtml(app.version)}</span>
-                </div>
-                <span class="app-category">${escapeHtml(app.category)}</span>
-            </div>
-            
-            <p class="app-description">${escapeHtml(app.description || 'No description available')}</p>
-            
-            <div class="app-stats">
-                <span><i class="fas fa-download"></i> ${app.downloads} downloads</span>
-                <span><i class="fas fa-calendar"></i> ${app.uploadDate}</span>
-            </div>
-            
-            <div class="app-actions">
-                <a href="${app.downloadUrl}" class="btn btn-primary" onclick="event.stopPropagation()">
+    return `
+        <div class="file-card" onclick="showAppDetails(${app.id})">
+            <div class="file-actions">
+                <button class="action-btn" onclick="event.stopPropagation(); downloadApp('${app.downloadUrl}')">
                     <i class="fas fa-download"></i>
-                    Download (${app.fileSize})
-                </a>
-                <button class="btn btn-secondary" onclick="event.stopPropagation(); showAppDetails(${app.id})">
-                    <i class="fas fa-info-circle"></i>
-                    Details
                 </button>
             </div>
+            <div class="file-icon ${fileType}">
+                <i class="${fileIcon}"></i>
+            </div>
+            <div class="file-info">
+                <h3>${app.name}</h3>
+                <p>${app.description || 'No description'}</p>
+                <div class="file-meta">
+                    <span>${app.fileSize}</span>
+                    <span>${app.downloads} downloads</span>
+                </div>
+            </div>
         </div>
-    `).join('');
+    `;
+}
+
+// Get file type from URL
+function getFileType(url) {
+    const extension = url.split('.').pop().toLowerCase();
+    switch (extension) {
+        case 'apk':
+        case 'aab':
+            return 'android';
+        case 'ipa':
+            return 'ios';
+        case 'exe':
+        case 'msi':
+            return 'windows';
+        case 'dmg':
+        case 'pkg':
+            return 'macos';
+        default:
+            return 'generic';
+    }
+}
+
+// Get file icon
+function getFileIcon(fileType) {
+    switch (fileType) {
+        case 'android':
+            return 'fab fa-android';
+        case 'ios':
+            return 'fab fa-apple';
+        case 'windows':
+            return 'fab fa-windows';
+        case 'macos':
+            return 'fab fa-apple';
+        default:
+            return 'fas fa-file';
+    }
+}
+
+// Filter apps
+function filterApps(searchTerm) {
+    const filteredApps = apps.filter(app => 
+        app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    renderFilteredApps(filteredApps);
+}
+
+// Render filtered apps
+function renderFilteredApps(filteredApps) {
+    if (!appsGrid) return;
+
+    if (filteredApps.length === 0) {
+        appsGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px;">
+                <i class="fas fa-search"></i>
+                <h3>No results found</h3>
+                <p>Try adjusting your search terms</p>
+            </div>
+        `;
+        return;
+    }
+
+    appsGrid.innerHTML = filteredApps.map(app => createAppCard(app)).join('');
+}
+
+// Sort apps
+function sortApps(sortBy) {
+    const sortedApps = [...apps].sort((a, b) => {
+        switch (sortBy) {
+            case 'name':
+                return a.name.localeCompare(b.name);
+            case 'date':
+                return new Date(b.uploadDate) - new Date(a.uploadDate);
+            case 'size':
+                return parseFloat(a.fileSize) - parseFloat(b.fileSize);
+            case 'downloads':
+                return b.downloads - a.downloads;
+            default:
+                return 0;
+        }
+    });
+    
+    renderFilteredApps(sortedApps);
 }
 
 // Show app details in modal
 async function showAppDetails(appId) {
     try {
         const response = await fetch(`/api/apps/${appId}`);
+        const app = await response.json();
+        
+        modalTitle.textContent = app.name;
+        modalContent.innerHTML = `
+            <div style="display: grid; gap: 16px;">
+                <div>
+                    <h4>Description</h4>
+                    <p>${app.description || 'No description available'}</p>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <h4>Version</h4>
+                        <p>${app.version}</p>
+                    </div>
+                    <div>
+                        <h4>Category</h4>
+                        <p>${app.category}</p>
+                    </div>
+                    <div>
+                        <h4>File Size</h4>
+                        <p>${app.fileSize}</p>
+                    </div>
+                    <div>
+                        <h4>Downloads</h4>
+                        <p>${app.downloads}</p>
+                    </div>
+                </div>
+                <div>
+                    <h4>Upload Date</h4>
+                    <p>${app.uploadDate}</p>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button class="btn-primary" onclick="downloadApp('${app.downloadUrl}')">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                    <button class="btn-secondary" onclick="modal.style.display='none'">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+    } catch (error) {
+        console.error('Error loading app details:', error);
+        showMessage('Error loading app details', 'error');
+    }
+}
+
+// Download app
+function downloadApp(url) {
+    window.open(url, '_blank');
+}
+
+// Show upload form
+function showUploadForm() {
+    if (uploadForm) {
+        uploadForm.style.display = 'block';
+    }
+    if (uploadArea) {
+        uploadArea.style.display = 'none';
+    }
+}
+
+// Hide upload form
+function hideUploadForm() {
+    if (uploadForm) {
+        uploadForm.style.display = 'none';
+        uploadForm.reset();
+    }
+    if (uploadArea) {
+        uploadArea.style.display = 'block';
+    }
+    if (appFileInput) {
+        appFileInput.value = '';
+    }
+}
+
+// Handle file upload
+async function handleUpload(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(uploadForm);
+    
+    try {
+        const response = await fetch('/api/apps', {
+            method: 'POST',
+            body: formData
+        });
+        
         if (response.ok) {
-            const app = await response.json();
-            showAppModal(app);
+            const newApp = await response.json();
+            apps.push(newApp);
+            renderApps();
+            hideUploadForm();
+            showMessage('App uploaded successfully!', 'success');
+            switchTab('files');
         } else {
-            showNotification('Failed to load app details', 'error');
+            const error = await response.json();
+            showMessage(error.error || 'Upload failed', 'error');
         }
     } catch (error) {
-        showNotification('Failed to load app details', 'error');
+        console.error('Upload error:', error);
+        showMessage('Upload failed', 'error');
     }
 }
 
-// Show app modal
-function showAppModal(app) {
-    modalContent.innerHTML = `
-        <div class="app-details">
-            <div class="app-header">
-                <div class="app-info">
-                    <h2>${escapeHtml(app.name)}</h2>
-                    <span class="version">v${escapeHtml(app.version)}</span>
-                </div>
-                <span class="app-category">${escapeHtml(app.category)}</span>
-            </div>
-            
-            <div class="app-description">
-                <h3>Description</h3>
-                <p>${escapeHtml(app.description || 'No description available')}</p>
-            </div>
-            
-            <div class="app-stats-grid">
-                <div class="stat">
-                    <i class="fas fa-download"></i>
-                    <span>${app.downloads} downloads</span>
-                </div>
-                <div class="stat">
-                    <i class="fas fa-calendar"></i>
-                    <span>Uploaded: ${app.uploadDate}</span>
-                </div>
-                <div class="stat">
-                    <i class="fas fa-file"></i>
-                    <span>Size: ${app.fileSize}</span>
-                </div>
-            </div>
-            
-            <div class="modal-actions">
-                <a href="${app.downloadUrl}" class="btn btn-primary">
-                    <i class="fas fa-download"></i>
-                    Download App
-                </a>
-                <button class="btn btn-secondary" onclick="modal.style.display='none'">
-                    Close
-                </button>
-            </div>
-        </div>
-    `;
+// Show message
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
     
-    modal.style.display = 'block';
-}
-
-// Utility functions
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    // Add styles
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 5px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    // Add animation styles
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(notification);
-    
-    // Remove notification after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
+    const contentArea = document.querySelector('.content-area');
+    if (contentArea) {
+        contentArea.insertBefore(messageDiv, contentArea.firstChild);
+        
         setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
+            messageDiv.remove();
+        }, 5000);
+    }
 }
-
-// File upload drag and drop
-document.addEventListener('DOMContentLoaded', function() {
-    const fileUpload = document.querySelector('.file-upload');
-    const fileInput = document.getElementById('appFile');
-    const fileLabel = document.querySelector('.file-upload-label span');
-    
-    if (fileUpload && fileInput) {
-        // Drag and drop functionality
-        fileUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUpload.style.background = 'rgba(102, 126, 234, 0.2)';
-        });
-        
-        fileUpload.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            fileUpload.style.background = 'rgba(102, 126, 234, 0.05)';
-        });
-        
-        fileUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUpload.style.background = 'rgba(102, 126, 234, 0.05)';
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                fileInput.files = files;
-                updateFileLabel(files[0].name);
-            }
-        });
-        
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                updateFileLabel(e.target.files[0].name);
-            }
-        });
-    }
-    
-    function updateFileLabel(fileName) {
-        fileLabel.textContent = fileName;
-        fileLabel.style.color = '#667eea';
-        fileLabel.style.fontWeight = '600';
-    }
-});
-
-// Add some additional CSS for notifications
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-    
-    .app-details {
-        padding: 0;
-    }
-    
-    .app-details .app-header {
-        margin-bottom: 1.5rem;
-    }
-    
-    .app-details .app-description h3 {
-        margin-bottom: 0.5rem;
-        color: #333;
-    }
-    
-    .app-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        margin: 1.5rem 0;
-    }
-    
-    .stat {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        font-size: 0.9rem;
-    }
-    
-    .stat i {
-        color: #667eea;
-    }
-    
-    .modal-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 1.5rem;
-    }
-    
-    .no-apps {
-        text-align: center;
-        padding: 3rem;
-        color: white;
-    }
-    
-    .no-apps i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.7;
-    }
-    
-    .no-apps h3 {
-        margin-bottom: 0.5rem;
-    }
-    
-    .no-apps p {
-        opacity: 0.8;
-    }
-`;
-document.head.appendChild(notificationStyles);
