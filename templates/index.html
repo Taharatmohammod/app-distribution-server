@@ -3,204 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppBox - App Distribution Center</title>
+    <title>TMS App Store</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Sidebar Navigation -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-box"></i>
-                <span>AppBox</span>
-            </div>
+    <!-- Top App Bar -->
+    <header class="tms-appbar">
+        <div class="tms-logo">
+            <i class="fas fa-play"></i>
+            <span>TMS</span>
         </div>
-        
-        <div class="sidebar-nav">
-            <a href="#" class="nav-item active" data-tab="files">
-                <i class="fas fa-folder"></i>
-                <span>Files</span>
-            </a>
-            <a href="#" class="nav-item" data-tab="upload">
-                <i class="fas fa-upload"></i>
-                <span>Upload</span>
-            </a>
-            <a href="#" class="nav-item" data-tab="shared">
-                <i class="fas fa-share-alt"></i>
-                <span>Shared</span>
-            </a>
-            <a href="#" class="nav-item" data-tab="about">
-                <i class="fas fa-info-circle"></i>
-                <span>About</span>
-            </a>
+        <div class="tms-search">
+            <input type="text" id="searchInput" placeholder="Search apps...">
+            <i class="fas fa-search"></i>
         </div>
-        
-        <div class="sidebar-footer">
-            <div class="storage-info">
-                <div class="storage-text">
-                    <span>Storage</span>
-                    <span class="storage-used">2.1 GB of 2 GB</span>
-                </div>
-                <div class="storage-bar">
-                    <div class="storage-progress" style="width: 85%"></div>
-                </div>
-            </div>
-        </div>
+    </header>
+
+    <!-- Category Tabs -->
+    <nav class="tms-tabs">
+        <button class="tms-tab active" data-tab="apps">Apps</button>
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top Header -->
-        <header class="top-header">
-            <div class="header-left">
-                <button class="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="breadcrumb">
-                    <span>Files</span>
-                </div>
-            </div>
-            
-            <div class="header-right">
-                <div class="search-container">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search apps...">
-                </div>
-                <button class="btn-upload">
-                    <i class="fas fa-plus"></i>
-                    New Upload
-                </button>
-            </div>
-        </header>
-
-        <!-- Content Area -->
-        <div class="content-area">
-            <!-- Files Tab -->
-            <div class="tab-content active" id="files-tab">
-                <div class="files-header">
-                    <div class="view-options">
-                        <button class="view-btn active" data-view="grid">
-                            <i class="fas fa-th"></i>
-                        </button>
-                        <button class="view-btn" data-view="list">
-                            <i class="fas fa-list"></i>
-                        </button>
-                    </div>
-                    <div class="sort-options">
-                        <select id="sortSelect">
-                            <option value="name">Name</option>
-                            <option value="date">Date</option>
-                            <option value="size">Size</option>
-                            <option value="downloads">Downloads</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="files-grid" id="appsGrid">
-                    <!-- Apps will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Upload Tab -->
-            <div class="tab-content" id="upload-tab">
-                <div class="upload-container">
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <h3>Upload your app</h3>
-                            <p>Drag and drop your app file here, or click to browse</p>
-                            <button class="btn-browse">Choose File</button>
-                        </div>
-                        <input type="file" id="appFile" name="appFile" accept=".apk,.ipa,.aab,.exe,.msi,.dmg,.pkg" hidden>
-                    </div>
-                    
-                    <form id="uploadForm" class="upload-form" style="display: none;">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="appName">App Name</label>
-                                <input type="text" id="appName" name="name" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="appVersion">Version</label>
-                                <input type="text" id="appVersion" name="version" placeholder="1.0.0" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="appCategory">Category</label>
-                                <select id="appCategory" name="category">
-                                    <option value="Utility">Utility</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Productivity">Productivity</option>
-                                    <option value="Games">Games</option>
-                                    <option value="Education">Education</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="appDescription">Description</label>
-                                <textarea id="appDescription" name="description" rows="3" placeholder="Describe your app..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" id="cancelUpload">Cancel</button>
-                            <button type="submit" class="btn-primary">
-                                <i class="fas fa-upload"></i>
-                                Upload App
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Shared Tab -->
-            <div class="tab-content" id="shared-tab">
-                <div class="shared-container">
-                    <h2>Shared Apps</h2>
-                    <p>Apps shared with you by other users will appear here.</p>
-                    <div class="empty-state">
-                        <i class="fas fa-share-alt"></i>
-                        <h3>No shared apps yet</h3>
-                        <p>When someone shares an app with you, it will appear here.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- About Tab -->
-            <div class="tab-content" id="about-tab">
-                <div class="about-container">
-                    <h2>About AppBox</h2>
-                    <p>AppBox is a modern app distribution platform that makes it easy to share and discover applications. Built with security and simplicity in mind.</p>
-                    
-                    <div class="features-grid">
-                        <div class="feature-card">
-                            <i class="fas fa-download"></i>
-                            <h3>Easy Downloads</h3>
-                            <p>Download apps directly to your device with one click</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fas fa-sync-alt"></i>
-                            <h3>Auto Updates</h3>
-                            <p>Get notified about new versions automatically</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fas fa-shield-alt"></i>
-                            <h3>Secure</h3>
-                            <p>All files are scanned for safety and security</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fas fa-mobile-alt"></i>
-                            <h3>Cross Platform</h3>
-                            <p>Support for Android, iOS, Windows, and macOS apps</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <main class="tms-main">
+        <div class="tms-apps-grid" id="appsGrid">
+            <!-- App cards will be loaded here -->
         </div>
     </main>
 
@@ -217,6 +45,6 @@
         </div>
     </div>
 
-    <script src="js/main.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html> 
