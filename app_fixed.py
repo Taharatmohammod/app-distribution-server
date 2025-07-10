@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 import mimetypes
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB limit
