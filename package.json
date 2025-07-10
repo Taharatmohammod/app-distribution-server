@@ -5,9 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "npm run build-css",
-    "build-css": "sass public/styles/main.scss public/styles/main.css"
+    "dev": "nodemon server.js"
   },
   "keywords": ["app", "distribution", "server", "updates"],
   "author": "Your Name",
