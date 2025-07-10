@@ -8,43 +8,62 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Top App Bar -->
-    <header class="tms-appbar">
-        <div class="tms-logo">
-            <i class="fas fa-play"></i>
-            <span>TMS</span>
+    <!-- Landing Section -->
+    <section id="landing" class="tms-landing">
+        <div class="tms-landing-content">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/74/Google_Play_Store_badge_EN.svg" alt="TMS Logo" class="tms-landing-logo">
+            <h1>Welcome to TMS App Store</h1>
+            <p>Your one-stop platform for discovering and distributing apps.</p>
+            <p><strong>Created by: [Your Name]</strong></p>
+            <button id="enterApp" class="tms-landing-btn">Enter App Store</button>
         </div>
-        <div class="tms-search">
-            <input type="text" id="searchInput" placeholder="Search apps...">
-            <i class="fas fa-search"></i>
-        </div>
-    </header>
+    </section>
 
-    <!-- Category Tabs -->
-    <nav class="tms-tabs">
-        <button class="tms-tab active" data-tab="apps">Apps</button>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="tms-main">
-        <div class="tms-apps-grid" id="appsGrid">
-            <!-- App cards will be loaded here -->
-        </div>
-    </main>
-
-    <!-- App Details Modal -->
-    <div class="modal" id="appModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">App Details</h3>
-                <button class="close">&times;</button>
+    <!-- App Store Interface (hidden by default) -->
+    <div id="appstore" style="display:none;">
+        <!-- Top App Bar -->
+        <header class="tms-appbar">
+            <div class="tms-logo">
+                <i class="fas fa-play"></i>
+                <span>TMS</span>
             </div>
-            <div class="modal-body" id="modalContent">
-                <!-- Modal content will be loaded here -->
+            <div class="tms-search">
+                <input type="text" id="searchInput" placeholder="Search apps...">
+                <i class="fas fa-search"></i>
+            </div>
+        </header>
+        <!-- Category Tabs -->
+        <nav class="tms-tabs">
+            <button class="tms-tab active" data-tab="apps">Apps</button>
+        </nav>
+        <!-- Main Content -->
+        <main class="tms-main">
+            <div class="tms-apps-grid" id="appsGrid">
+                <!-- App cards will be loaded here -->
+            </div>
+        </main>
+        <!-- App Details Modal -->
+        <div class="modal" id="appModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">App Details</h3>
+                    <button class="close">&times;</button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                    <!-- Modal content will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
-
+    <script>
+        // Show app store when button is clicked
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('enterApp').onclick = function() {
+                document.getElementById('landing').style.display = 'none';
+                document.getElementById('appstore').style.display = 'block';
+            };
+        });
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html> 
