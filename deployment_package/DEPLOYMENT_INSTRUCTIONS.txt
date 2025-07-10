@@ -1,0 +1,24 @@
+
+# PythonAnywhere Deployment Instructions
+
+## Files Ready for Upload
+All necessary files are in the 'deployment_package' directory.
+
+## Quick Setup Steps:
+1. Go to [pythonanywhere.com](https://www.pythonanywhere.com)
+2. Create a free account
+3. Upload all files from the 'deployment_package' folder to your home directory
+4. Follow the detailed guide in deployment_guide.md
+
+## Your Site URL
+Once deployed, your site will be at: yourusername.pythonanywhere.com
+
+## Files Included:
+- app.py (main Flask application)
+- wsgi.py (WSGI entry point)
+- requirements.txt (Python dependencies)
+- static/ (CSS and JS files)
+- templates/ (HTML template)
+- uploads/ (directory for uploaded files)
+
+Created: 2025-07-11 01:01:26

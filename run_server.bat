@@ -1,0 +1,9 @@
+@echo off
+echo Starting App Distribution Server...
+echo.
+echo Installing dependencies...
+pip install -r requirements.txt
+echo.
+echo Starting server...
+python app.py
+pause 
