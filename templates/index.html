@@ -4,35 +4,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMS App Store</title>
-    <link rel="stylesheet" href="static/styles/main.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Top App Bar -->
-    <header class="tms-appbar">
-        <div class="tms-logo">
-            <i class="fas fa-play"></i>
-            <span>TMS</span>
-        </div>
-        <div class="tms-search">
-            <input type="text" id="searchInput" placeholder="Search apps...">
-            <i class="fas fa-search"></i>
-        </div>
-    </header>
-    <!-- Category Tabs -->
-    <nav class="tms-tabs">
-        <button class="tms-tab active" data-tab="apps">Apps</button>
-    </nav>
-    <!-- Main Content -->
-    <main class="tms-main">
-        <div class="tms-apps-grid" id="appsGrid">
-            <!-- App cards will be loaded here -->
-        </div>
-    </main>
-    <footer class="tms-footer">
-        Made with ❤️ by [Your Name] &middot; Powered by Supabase & Railway
-    </footer>
-    <script src="static/js/main.js"></script>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand">
+                <h1>TMS</h1>
+                <p>App Distribution</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Side - App List -->
+            <section class="app-list">
+                <div class="app-list-header">
+                    <h2>Available Apps</h2>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search apps..." id="searchInput">
+                    </div>
+                </div>
+                
+                <div class="apps-grid" id="appsGrid">
+                    <!-- App cards will be dynamically populated -->
+                    <div class="app-card active" data-app-id="1">
+                        <div class="app-icon">
+                            <img src="https://via.placeholder.com/60/4F46E5/FFFFFF?text=App" alt="App Icon">
+                        </div>
+                        <div class="app-info">
+                            <h3>Sample App 1</h3>
+                            <p>Version 1.0.0</p>
+                            <span class="app-category">Productivity</span>
+                        </div>
+                    </div>
+                    
+                    <div class="app-card" data-app-id="2">
+                        <div class="app-icon">
+                            <img src="https://via.placeholder.com/60/10B981/FFFFFF?text=App" alt="App Icon">
+                        </div>
+                        <div class="app-info">
+                            <h3>Sample App 2</h3>
+                            <p>Version 2.1.0</p>
+                            <span class="app-category">Utility</span>
+                        </div>
+                    </div>
+                    
+                    <div class="app-card" data-app-id="3">
+                        <div class="app-icon">
+                            <img src="https://via.placeholder.com/60/F59E0B/FFFFFF?text=App" alt="App Icon">
+                        </div>
+                        <div class="app-info">
+                            <h3>Sample App 3</h3>
+                            <p>Version 1.5.2</p>
+                            <span class="app-category">Entertainment</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side - App Details -->
+            <section class="app-details">
+                <div class="app-details-header">
+                    <div class="selected-app-info">
+                        <img src="https://via.placeholder.com/80/4F46E5/FFFFFF?text=App" alt="App Icon" class="selected-app-icon">
+                        <div>
+                            <h2>Sample App 1</h2>
+                            <p>Version 1.0.0 • Productivity</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="tab-navigation">
+                    <button class="tab-button active" data-tab="details">Details</button>
+                    <button class="tab-button" data-tab="screenshots">Screenshots</button>
+                    <button class="tab-button" data-tab="changelog">Changelog</button>
+                    <button class="tab-button" data-tab="install">Install</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Details Tab -->
+                    <div class="tab-panel active" id="details">
+                        <div class="app-description">
+                            <h3>About this app</h3>
+                            <p>This is a sample app description. It showcases the features and functionality of the application. Users can learn about what the app does and its key features here.</p>
+                        </div>
+                        
+                        <div class="app-features">
+                            <h3>Features</h3>
+                            <ul>
+                                <li>Feature 1 description</li>
+                                <li>Feature 2 description</li>
+                                <li>Feature 3 description</li>
+                                <li>Feature 4 description</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="app-meta">
+                            <div class="meta-item">
+                                <span class="label">Size:</span>
+                                <span class="value">15.2 MB</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="label">Downloads:</span>
+                                <span class="value">1,234</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="label">Updated:</span>
+                                <span class="value">2024-01-15</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screenshots Tab -->
+                    <div class="tab-panel" id="screenshots">
+                        <div class="screenshots-grid">
+                            <div class="screenshot">
+                                <img src="https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+1" alt="Screenshot 1">
+                            </div>
+                            <div class="screenshot">
+                                <img src="https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+2" alt="Screenshot 2">
+                            </div>
+                            <div class="screenshot">
+                                <img src="https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+3" alt="Screenshot 3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Changelog Tab -->
+                    <div class="tab-panel" id="changelog">
+                        <div class="changelog">
+                            <div class="version-entry">
+                                <h3>Version 1.0.0 (2024-01-15)</h3>
+                                <ul>
+                                    <li>Initial release</li>
+                                    <li>Core functionality implemented</li>
+                                    <li>Basic UI components</li>
+                                </ul>
+                            </div>
+                            <div class="version-entry">
+                                <h3>Version 0.9.0 (2024-01-10)</h3>
+                                <ul>
+                                    <li>Beta testing phase</li>
+                                    <li>Bug fixes and improvements</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Install Tab -->
+                    <div class="tab-panel" id="install">
+                        <div class="install-section">
+                            <div class="install-header">
+                                <h3>Install App</h3>
+                                <p>Download and install the APK file on your Android device</p>
+                            </div>
+                            
+                            <div class="download-options">
+                                <div class="download-card">
+                                    <div class="download-icon">📱</div>
+                                    <h4>Direct Download</h4>
+                                    <p>Download the APK file directly to your device</p>
+                                    <button class="download-btn primary">Download APK</button>
+                                </div>
+                                
+                                <div class="download-card">
+                                    <div class="download-icon">📱</div>
+                                    <h4>QR Code</h4>
+                                    <p>Scan the QR code with your phone to download</p>
+                                    <div class="qr-code">
+                                        <img src="https://via.placeholder.com/150/000000/FFFFFF?text=QR" alt="QR Code">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="install-instructions">
+                                <h4>Installation Instructions</h4>
+                                <ol>
+                                    <li>Download the APK file to your Android device</li>
+                                    <li>Go to Settings > Security > Unknown Sources</li>
+                                    <li>Enable "Allow installation from unknown sources"</li>
+                                    <li>Open the downloaded APK file</li>
+                                    <li>Tap "Install" when prompted</li>
+                                    <li>Wait for installation to complete</li>
+                                    <li>Open the app from your app drawer</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html> 
