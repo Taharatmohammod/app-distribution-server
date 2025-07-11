@@ -294,6 +294,21 @@ function loadAppDetails(app) {
     updateInstallTab(app);
 }
 
+// Fetch and update download count for an app
+async function updateDownloadCount(app) {
+    const detailsPanel = document.getElementById('details');
+    const { count, error } = await supabase
+        .from('downloads')
+        .select('*', { count: 'exact', head: true })
+        .eq('app_id', app.id);
+    const downloadCount = error ? 'Unknown' : formatNumber(count || 0);
+    // Update the downloads value in the details panel
+    const downloadsElem = detailsPanel.querySelector('.meta-item .label:contains("Downloads:")')?.parentElement.querySelector('.value');
+    if (downloadsElem) {
+        downloadsElem.textContent = downloadCount;
+    }
+}
+
 // Update Details Tab
 function updateDetailsTab(app) {
     const detailsPanel = document.getElementById('details');
@@ -316,7 +331,7 @@ function updateDetailsTab(app) {
             </div>
             <div class="meta-item">
                 <span class="label">Downloads:</span>
-                <span class="value">${formatNumber(app.download_count || 0)}</span>
+                <span class="value">Loading...</span>
             </div>
             <div class="meta-item">
                 <span class="label">Updated:</span>
@@ -324,6 +339,8 @@ function updateDetailsTab(app) {
             </div>
         </div>
     `;
+    // Fetch and update the download count
+    updateDownloadCount(app);
 }
 
 // Update Screenshots Tab
@@ -431,13 +448,11 @@ async function downloadApp(appId, appName) {
         const { data, error } = await supabase.storage
             .from('apks')
             .createSignedUrl(`${appId}.apk`, 60);
-        
         if (error) {
             console.error('Error generating download URL:', error);
             alert('Download failed. Please try again later.');
             return;
         }
-        
         // Track download
         await supabase
             .from('downloads')
@@ -445,10 +460,11 @@ async function downloadApp(appId, appName) {
                 app_id: appId, 
                 downloaded_at: new Date().toISOString() 
             });
-        
+        // Update download count after successful insert
+        const app = allApps.find(a => a.id === appId);
+        if (app) updateDownloadCount(app);
         // Trigger download
         window.open(data.signedUrl, '_blank');
-        
     } catch (error) {
         console.error('Error downloading app:', error);
         alert('Download failed. Please try again later.');
