@@ -42,7 +42,7 @@ body {
 .main-content {
     display: flex;
     flex: 1;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 80px - 200px); /* Adjusted for footer */
 }
 
 /* Left Side - App List */
@@ -459,6 +459,92 @@ body {
     line-height: 1.6;
 }
 
+/* Footer Styles */
+.footer {
+    background: #1e293b;
+    color: white;
+    padding: 2rem 0 1rem 0;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.footer-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #f8fafc;
+}
+
+.footer-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #f8fafc;
+}
+
+.footer-section p {
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+}
+
+.social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 0.5rem 0;
+}
+
+.social-link:hover {
+    color: #3b82f6;
+}
+
+.social-link i {
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+    width: 20px;
+}
+
+.contact-info p {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    color: #94a3b8;
+}
+
+.contact-info i {
+    margin-right: 0.75rem;
+    width: 16px;
+    color: #3b82f6;
+}
+
+.footer-bottom {
+    border-top: 1px solid #334155;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    text-align: center;
+}
+
+.footer-bottom p {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .main-content {
@@ -477,6 +563,19 @@ body {
     
     .download-options {
         grid-template-columns: 1fr;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .social-links {
+        align-items: center;
+    }
+    
+    .contact-info p {
+        justify-content: center;
     }
 }
 
@@ -511,6 +610,146 @@ body {
     .screenshots-grid {
         grid-template-columns: 1fr;
     }
+    
+    .footer {
+        padding: 1.5rem 0 1rem 0;
+    }
+    
+    .footer-content {
+        padding: 0 1rem;
+        gap: 1.5rem;
+    }
+}
+
+/* Error and No Results States */
+.no-apps-message,
+.error-message,
+.search-error,
+.no-app-selected,
+.no-screenshots,
+.no-changelog {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+}
+
+.no-apps-message h3,
+.error-message h3,
+.search-error h3,
+.no-app-selected h3,
+.no-screenshots h3,
+.no-changelog h3 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin: 1rem;
+}
+
+.retry-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.retry-btn:hover {
+    background: #b91c1c;
+}
+
+.search-error {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin: 1rem;
+}
+
+.error-content h3 {
+    color: #dc2626;
+    margin-bottom: 0.5rem;
+}
+
+.suggestions {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.suggestions h4 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.suggestion-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.suggestion-card {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.suggestion-card:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-card img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    margin-right: 0.75rem;
+}
+
+.suggestion-card h5 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.suggestion-card span {
+    font-size: 0.75rem;
+    color: #64748b;
+    background: #e0e7ff;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+}
+
+.clear-search-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.clear-search-btn:hover {
+    background: #4b5563;
 }
 
 /* Scrollbar Styling */

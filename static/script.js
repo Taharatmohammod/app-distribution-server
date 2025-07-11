@@ -1,133 +1,140 @@
+// Supabase Configuration
+const SUPABASE_URL = 'https://wgogoihxbasjhviqqfvk.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2dvaWh4YmFzamh2aXFxZnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxOTA2MDAsImV4cCI6MjA2Nzc2NjYwMH0._oAZ_22HKlhtLwZBei-cBpY3d9Sm_Lyc9E58jSF4Hwc'
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
 const appsGrid = document.getElementById('appsGrid');
-const appCards = document.querySelectorAll('.app-card');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
 
-// Sample app data (this would come from Supabase in production)
-const appsData = [
-    {
-        id: 1,
-        name: 'Sample App 1',
-        version: '1.0.0',
-        category: 'Productivity',
-        description: 'This is a sample app description. It showcases the features and functionality of the application. Users can learn about what the app does and its key features here.',
-        features: [
-            'Feature 1 description',
-            'Feature 2 description',
-            'Feature 3 description',
-            'Feature 4 description'
-        ],
-        size: '15.2 MB',
-        downloads: '1,234',
-        updated: '2024-01-15',
-        icon: 'https://via.placeholder.com/60/4F46E5/FFFFFF?text=App',
-        screenshots: [
-            'https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+1',
-            'https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+2',
-            'https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+3'
-        ],
-        changelog: [
-            {
-                version: '1.0.0',
-                date: '2024-01-15',
-                changes: [
-                    'Initial release',
-                    'Core functionality implemented',
-                    'Basic UI components'
-                ]
-            },
-            {
-                version: '0.9.0',
-                date: '2024-01-10',
-                changes: [
-                    'Beta testing phase',
-                    'Bug fixes and improvements'
-                ]
-            }
-        ]
-    },
-    {
-        id: 2,
-        name: 'Sample App 2',
-        version: '2.1.0',
-        category: 'Utility',
-        description: 'A utility app that helps users with various tasks and provides essential tools for daily use.',
-        features: [
-            'Advanced utility features',
-            'Customizable interface',
-            'Cloud sync support',
-            'Offline functionality'
-        ],
-        size: '8.7 MB',
-        downloads: '2,567',
-        updated: '2024-01-20',
-        icon: 'https://via.placeholder.com/60/10B981/FFFFFF?text=App',
-        screenshots: [
-            'https://via.placeholder.com/300x600/10B981/FFFFFF?text=Screenshot+1',
-            'https://via.placeholder.com/300x600/10B981/FFFFFF?text=Screenshot+2'
-        ],
-        changelog: [
-            {
-                version: '2.1.0',
-                date: '2024-01-20',
-                changes: [
-                    'Performance improvements',
-                    'New utility features',
-                    'Bug fixes'
-                ]
-            }
-        ]
-    },
-    {
-        id: 3,
-        name: 'Sample App 3',
-        version: '1.5.2',
-        category: 'Entertainment',
-        description: 'An entertainment app that provides users with various forms of digital content and interactive experiences.',
-        features: [
-            'Rich media content',
-            'Interactive features',
-            'Social sharing',
-            'Personalized recommendations'
-        ],
-        size: '25.3 MB',
-        downloads: '3,891',
-        updated: '2024-01-18',
-        icon: 'https://via.placeholder.com/60/F59E0B/FFFFFF?text=App',
-        screenshots: [
-            'https://via.placeholder.com/300x600/F59E0B/FFFFFF?text=Screenshot+1',
-            'https://via.placeholder.com/300x600/F59E0B/FFFFFF?text=Screenshot+2',
-            'https://via.placeholder.com/300x600/F59E0B/FFFFFF?text=Screenshot+3'
-        ],
-        changelog: [
-            {
-                version: '1.5.2',
-                date: '2024-01-18',
-                changes: [
-                    'New entertainment features',
-                    'UI improvements',
-                    'Performance optimizations'
-                ]
-            }
-        ]
-    }
-];
+// Global variables
+let allApps = [];
+let filteredApps = [];
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-function initializeApp() {
+async function initializeApp() {
     // Set up event listeners
     setupTabNavigation();
-    setupAppSelection();
     setupSearch();
     
-    // Load initial app data
-    loadAppDetails(appsData[0]);
+    // Load apps from Supabase
+    await loadAppsFromSupabase();
+}
+
+// Load Apps from Supabase
+async function loadAppsFromSupabase() {
+    try {
+        const { data, error } = await supabase
+            .from('apps')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error fetching apps:', error);
+            showError('Failed to load apps. Please try again later.');
+            return;
+        }
+        
+        allApps = data || [];
+        filteredApps = [...allApps];
+        
+        if (allApps.length === 0) {
+            showNoAppsMessage();
+        } else {
+            renderAppsList(allApps);
+            // Load first app details
+            loadAppDetails(allApps[0]);
+        }
+        
+    } catch (error) {
+        console.error('Error loading apps:', error);
+        showError('Failed to load apps. Please try again later.');
+    }
+}
+
+// Render Apps List
+function renderAppsList(apps) {
+    if (apps.length === 0) {
+        appsGrid.innerHTML = `
+            <div class="no-apps-message">
+                <h3>No apps available</h3>
+                <p>Check back later for new apps!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    appsGrid.innerHTML = apps.map((app, index) => `
+        <div class="app-card ${index === 0 ? 'active' : ''}" data-app-id="${app.id}">
+            <div class="app-icon">
+                <img src="${app.icon_url || 'https://via.placeholder.com/60/4F46E5/FFFFFF?text=App'}" alt="${app.name} Icon">
+            </div>
+            <div class="app-info">
+                <h3>${app.name}</h3>
+                <p>Version ${app.version}</p>
+                <span class="app-category">${app.category}</span>
+            </div>
+        </div>
+    `).join('');
+    
+    // Set up app selection
+    setupAppSelection();
+}
+
+// Show No Apps Message
+function showNoAppsMessage() {
+    appsGrid.innerHTML = `
+        <div class="no-apps-message">
+            <h3>No apps available yet</h3>
+            <p>Apps will appear here once they are uploaded to the system.</p>
+        </div>
+    `;
+    
+    // Clear app details
+    clearAppDetails();
+}
+
+// Clear App Details
+function clearAppDetails() {
+    const selectedAppInfo = document.querySelector('.selected-app-info');
+    if (selectedAppInfo) {
+        selectedAppInfo.innerHTML = `
+            <img src="https://via.placeholder.com/80/4F46E5/FFFFFF?text=No+App" alt="No App Icon" class="selected-app-icon">
+            <div>
+                <h2>No App Selected</h2>
+                <p>Select an app to view details</p>
+            </div>
+        `;
+    }
+    
+    // Clear all tab content
+    tabPanels.forEach(panel => {
+        panel.innerHTML = `
+            <div class="no-app-selected">
+                <h3>No App Selected</h3>
+                <p>Please select an app from the list to view its details.</p>
+            </div>
+        `;
+    });
+}
+
+// Show Error Message
+function showError(message) {
+    appsGrid.innerHTML = `
+        <div class="error-message">
+            <h3>Error</h3>
+            <p>${message}</p>
+            <button onclick="loadAppsFromSupabase()" class="retry-btn">Try Again</button>
+        </div>
+    `;
 }
 
 // Tab Navigation
@@ -149,10 +156,12 @@ function setupTabNavigation() {
 
 // App Selection
 function setupAppSelection() {
+    const appCards = document.querySelectorAll('.app-card');
+    
     appCards.forEach(card => {
         card.addEventListener('click', function() {
             const appId = parseInt(this.getAttribute('data-app-id'));
-            const selectedApp = appsData.find(app => app.id === appId);
+            const selectedApp = allApps.find(app => app.id === appId);
             
             if (selectedApp) {
                 // Update active card
@@ -166,22 +175,89 @@ function setupAppSelection() {
     });
 }
 
-// Search Functionality
+// Search Functionality with Error Handling
 function setupSearch() {
     searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
+        const searchTerm = this.value.toLowerCase().trim();
         
-        appCards.forEach(card => {
-            const appName = card.querySelector('h3').textContent.toLowerCase();
-            const appCategory = card.querySelector('.app-category').textContent.toLowerCase();
-            
-            if (appName.includes(searchTerm) || appCategory.includes(searchTerm)) {
-                card.style.display = 'flex';
-            } else {
-                card.style.display = 'none';
-            }
-        });
+        if (searchTerm === '') {
+            filteredApps = [...allApps];
+            renderAppsList(filteredApps);
+            return;
+        }
+        
+        // Filter apps based on search term
+        filteredApps = allApps.filter(app => 
+            app.name.toLowerCase().includes(searchTerm) ||
+            app.category.toLowerCase().includes(searchTerm) ||
+            app.description.toLowerCase().includes(searchTerm)
+        );
+        
+        if (filteredApps.length === 0) {
+            showSearchError(searchTerm);
+        } else {
+            renderAppsList(filteredApps);
+        }
     });
+}
+
+// Show Search Error with Suggestions
+function showSearchError(searchTerm) {
+    // Get random suggestions (up to 3 apps that don't match the search)
+    const suggestions = allApps
+        .filter(app => 
+            !app.name.toLowerCase().includes(searchTerm) &&
+            !app.category.toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 3);
+    
+    appsGrid.innerHTML = `
+        <div class="search-error">
+            <div class="error-content">
+                <h3>No apps found for "${searchTerm}"</h3>
+                <p>We couldn't find any apps matching your search.</p>
+                
+                ${suggestions.length > 0 ? `
+                    <div class="suggestions">
+                        <h4>You may like these apps:</h4>
+                        <div class="suggestion-cards">
+                            ${suggestions.map(app => `
+                                <div class="suggestion-card" onclick="selectSuggestion(${app.id})">
+                                    <img src="${app.icon_url || 'https://via.placeholder.com/40/4F46E5/FFFFFF?text=App'}" alt="${app.name}">
+                                    <div>
+                                        <h5>${app.name}</h5>
+                                        <span>${app.category}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <button onclick="clearSearch()" class="clear-search-btn">
+                    <i class="fas fa-times"></i> Clear Search
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Select Suggestion
+function selectSuggestion(appId) {
+    const selectedApp = allApps.find(app => app.id === appId);
+    if (selectedApp) {
+        searchInput.value = '';
+        filteredApps = [...allApps];
+        renderAppsList(filteredApps);
+        loadAppDetails(selectedApp);
+    }
+}
+
+// Clear Search
+function clearSearch() {
+    searchInput.value = '';
+    filteredApps = [...allApps];
+    renderAppsList(filteredApps);
 }
 
 // Load App Details
@@ -189,7 +265,7 @@ function loadAppDetails(app) {
     // Update app header
     const selectedAppInfo = document.querySelector('.selected-app-info');
     selectedAppInfo.innerHTML = `
-        <img src="${app.icon}" alt="App Icon" class="selected-app-icon">
+        <img src="${app.icon_url || 'https://via.placeholder.com/80/4F46E5/FFFFFF?text=App'}" alt="App Icon" class="selected-app-icon">
         <div>
             <h2>${app.name}</h2>
             <p>Version ${app.version} • ${app.category}</p>
@@ -216,28 +292,29 @@ function updateDetailsTab(app) {
     detailsPanel.innerHTML = `
         <div class="app-description">
             <h3>About this app</h3>
-            <p>${app.description}</p>
+            <p>${app.description || 'No description available.'}</p>
         </div>
         
         <div class="app-features">
             <h3>Features</h3>
             <ul>
-                ${app.features.map(feature => `<li>${feature}</li>`).join('')}
+                ${(app.features || []).map(feature => `<li>${feature}</li>`).join('')}
+                ${(app.features || []).length === 0 ? '<li>Features will be added soon</li>' : ''}
             </ul>
         </div>
         
         <div class="app-meta">
             <div class="meta-item">
                 <span class="label">Size:</span>
-                <span class="value">${app.size}</span>
+                <span class="value">${app.file_size || 'Unknown'}</span>
             </div>
             <div class="meta-item">
                 <span class="label">Downloads:</span>
-                <span class="value">${app.downloads}</span>
+                <span class="value">${formatNumber(app.download_count || 0)}</span>
             </div>
             <div class="meta-item">
                 <span class="label">Updated:</span>
-                <span class="value">${app.updated}</span>
+                <span class="value">${formatDate(app.updated_at || app.created_at)}</span>
             </div>
         </div>
     `;
@@ -247,33 +324,51 @@ function updateDetailsTab(app) {
 function updateScreenshotsTab(app) {
     const screenshotsPanel = document.getElementById('screenshots');
     
-    screenshotsPanel.innerHTML = `
-        <div class="screenshots-grid">
-            ${app.screenshots.map(screenshot => `
-                <div class="screenshot">
-                    <img src="${screenshot}" alt="Screenshot">
-                </div>
-            `).join('')}
-        </div>
-    `;
+    if (app.screenshots && app.screenshots.length > 0) {
+        screenshotsPanel.innerHTML = `
+            <div class="screenshots-grid">
+                ${app.screenshots.map(screenshot => `
+                    <div class="screenshot">
+                        <img src="${screenshot}" alt="Screenshot">
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        screenshotsPanel.innerHTML = `
+            <div class="no-screenshots">
+                <h3>No Screenshots Available</h3>
+                <p>Screenshots will be added soon.</p>
+            </div>
+        `;
+    }
 }
 
 // Update Changelog Tab
 function updateChangelogTab(app) {
     const changelogPanel = document.getElementById('changelog');
     
-    changelogPanel.innerHTML = `
-        <div class="changelog">
-            ${app.changelog.map(version => `
-                <div class="version-entry">
-                    <h3>Version ${version.version} (${version.date})</h3>
-                    <ul>
-                        ${version.changes.map(change => `<li>${change}</li>`).join('')}
-                    </ul>
-                </div>
-            `).join('')}
-        </div>
-    `;
+    if (app.changelog && app.changelog.length > 0) {
+        changelogPanel.innerHTML = `
+            <div class="changelog">
+                ${app.changelog.map(version => `
+                    <div class="version-entry">
+                        <h3>Version ${version.version} (${formatDate(version.date)})</h3>
+                        <ul>
+                            ${version.changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        changelogPanel.innerHTML = `
+            <div class="no-changelog">
+                <h3>No Changelog Available</h3>
+                <p>Changelog will be added soon.</p>
+            </div>
+        `;
+    }
 }
 
 // Update Install Tab
@@ -292,7 +387,7 @@ function updateInstallTab(app) {
                     <div class="download-icon">📱</div>
                     <h4>Direct Download</h4>
                     <p>Download the APK file directly to your device</p>
-                    <button class="download-btn primary" onclick="downloadApp('${app.name}')">Download APK</button>
+                    <button class="download-btn primary" onclick="downloadApp(${app.id}, '${app.name}')">Download APK</button>
                 </div>
                 
                 <div class="download-card">
@@ -300,7 +395,7 @@ function updateInstallTab(app) {
                     <h4>QR Code</h4>
                     <p>Scan the QR code with your phone to download</p>
                     <div class="qr-code">
-                        <img src="https://via.placeholder.com/150/000000/FFFFFF?text=QR" alt="QR Code">
+                        <img src="${generateQRCode(app.download_url)}" alt="QR Code">
                     </div>
                 </div>
             </div>
@@ -322,74 +417,53 @@ function updateInstallTab(app) {
 }
 
 // Download App Function
-function downloadApp(appName) {
-    // This would integrate with your actual download system
-    alert(`Download started for ${appName}. This would trigger the actual APK download in production.`);
-    
-    // In production, this would:
-    // 1. Generate a download link from Supabase storage
-    // 2. Track download count
-    // 3. Handle the actual file download
+async function downloadApp(appId, appName) {
+    try {
+        // Get signed URL from Supabase storage
+        const { data, error } = await supabase.storage
+            .from('apks')
+            .createSignedUrl(`${appId}.apk`, 60);
+        
+        if (error) {
+            console.error('Error generating download URL:', error);
+            alert('Download failed. Please try again later.');
+            return;
+        }
+        
+        // Track download
+        await supabase
+            .from('downloads')
+            .insert({ 
+                app_id: appId, 
+                downloaded_at: new Date().toISOString() 
+            });
+        
+        // Trigger download
+        window.open(data.signedUrl, '_blank');
+        
+    } catch (error) {
+        console.error('Error downloading app:', error);
+        alert('Download failed. Please try again later.');
+    }
 }
 
-// Utility function to format numbers
+// Utility Functions
 function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-// Utility function to generate QR code URL
+function formatDate(dateString) {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+}
+
 function generateQRCode(downloadUrl) {
-    // This would generate a QR code for the download URL
+    if (!downloadUrl) return 'https://via.placeholder.com/150/000000/FFFFFF?text=QR';
     return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(downloadUrl)}`;
 }
 
-// Future: Supabase Integration
-// When you're ready to integrate with Supabase, you would:
-// 1. Initialize Supabase client
-// 2. Fetch apps from the database
-// 3. Update the loadAppDetails function to use real data
-// 4. Implement actual download functionality
-// 5. Add download tracking
-
-/*
-// Example Supabase integration:
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'YOUR_SUPABASE_URL'
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY'
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-async function fetchApps() {
-    const { data, error } = await supabase
-        .from('apps')
-        .select('*')
-        .order('created_at', { ascending: false })
-    
-    if (error) {
-        console.error('Error fetching apps:', error)
-        return []
-    }
-    
-    return data
-}
-
-async function downloadApp(appId) {
-    // Get the download URL from Supabase storage
-    const { data, error } = await supabase.storage
-        .from('apks')
-        .createSignedUrl(`${appId}.apk`, 60)
-    
-    if (error) {
-        console.error('Error generating download URL:', error)
-        return
-    }
-    
-    // Trigger download
-    window.open(data.signedUrl, '_blank')
-    
-    // Track download
-    await supabase
-        .from('downloads')
-        .insert({ app_id: appId, downloaded_at: new Date() })
-}
-*/ 
+// Auto-refresh apps every 30 seconds to catch new uploads
+setInterval(async () => {
+    await loadAppsFromSupabase();
+}, 30000); 
