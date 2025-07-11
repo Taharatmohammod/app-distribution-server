@@ -47,12 +47,14 @@
         <main class="main-content">
             <!-- App Details - Now Full Width -->
             <section class="app-details" style="width: 100%;">
+                {% if apps and apps|length > 0 %}
+                {% set app = apps[0] %}
                 <div class="app-details-header">
                     <div class="selected-app-info">
                         <img src="https://via.placeholder.com/80/4F46E5/FFFFFF?text=App" alt="App Icon" class="selected-app-icon">
                         <div>
-                            <h2>Sample App 1</h2>
-                            <p>Version 1.0.0 • Productivity</p>
+                            <h2>{{ app.name }}</h2>
+                            <p>Version {{ app.version }}{% if app.category %} • {{ app.category }}{% endif %}</p>
                         </div>
                     </div>
                 </div>
@@ -69,7 +71,7 @@
                     <div class="tab-panel active" id="details">
                         <div class="app-description">
                             <h3>About this app</h3>
-                            <p>This is a sample app description. It showcases the features and functionality of the application. Users can learn about what the app does and its key features here.</p>
+                            <p>{{ app.description }}</p>
                         </div>
                         <div class="app-features">
                             <h3>Features</h3>
@@ -83,15 +85,15 @@
                         <div class="app-meta">
                             <div class="meta-item">
                                 <span class="label">Size:</span>
-                                <span class="value">15.2 MB</span>
+                                <span class="value">{{ app.fileSize }}</span>
                             </div>
                             <div class="meta-item">
                                 <span class="label">Downloads:</span>
-                                <span class="value">1,234</span>
+                                <span class="value">{{ app.downloads }}</span>
                             </div>
                             <div class="meta-item">
                                 <span class="label">Updated:</span>
-                                <span class="value">2024-01-15</span>
+                                <span class="value">{{ app.uploadDate }}</span>
                             </div>
                         </div>
                     </div>
@@ -113,18 +115,9 @@
                     <div class="tab-panel" id="changelog">
                         <div class="changelog">
                             <div class="version-entry">
-                                <h3>Version 1.0.0 (2024-01-15)</h3>
+                                <h3>Version {{ app.version }} ({{ app.uploadDate }})</h3>
                                 <ul>
                                     <li>Initial release</li>
-                                    <li>Core functionality implemented</li>
-                                    <li>Basic UI components</li>
-                                </ul>
-                            </div>
-                            <div class="version-entry">
-                                <h3>Version 0.9.0 (2024-01-10)</h3>
-                                <ul>
-                                    <li>Beta testing phase</li>
-                                    <li>Bug fixes and improvements</li>
                                 </ul>
                             </div>
                         </div>
@@ -141,7 +134,7 @@
                                     <div class="download-icon">📱</div>
                                     <h4>Direct Download</h4>
                                     <p>Download the APK file directly to your device</p>
-                                    <button class="download-btn primary">Download APK</button>
+                                    <a href="{{ app.downloadUrl }}" class="download-btn primary">Download APK</a>
                                 </div>
                                 <div class="download-card">
                                     <div class="download-icon">📱</div>
@@ -167,6 +160,11 @@
                         </div>
                     </div>
                 </div>
+                {% else %}
+                <div class="app-details-header">
+                    <h2>No apps available</h2>
+                </div>
+                {% endif %}
             </section>
         </main>
 
