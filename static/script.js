@@ -6,7 +6,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // DOM Elements
-const searchInput = document.getElementById('searchInput');
 const appsGrid = document.getElementById('appsGrid');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -17,7 +16,6 @@ const sliderIndicators = document.getElementById('sliderIndicators');
 
 // Global variables
 let allApps = [];
-let filteredApps = [];
 let currentSlide = 0;
 let slideInterval;
 
@@ -29,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeApp() {
     // Set up event listeners
     setupTabNavigation();
-    setupSearch();
+    setupAppSelection();
     setupHeroSlider();
     
     // Load apps from Supabase
@@ -51,7 +49,6 @@ async function loadAppsFromSupabase() {
         }
         
         allApps = data || [];
-        filteredApps = [...allApps];
         
         if (allApps.length === 0) {
             showNoAppsMessage();
@@ -183,91 +180,6 @@ function setupAppSelection() {
             }
         });
     });
-}
-
-// Search Functionality with Error Handling
-function setupSearch() {
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase().trim();
-        
-        if (searchTerm === '') {
-            filteredApps = [...allApps];
-            renderAppsList(filteredApps);
-            return;
-        }
-        
-        // Filter apps based on search term
-        filteredApps = allApps.filter(app => 
-            app.name.toLowerCase().includes(searchTerm) ||
-            app.category.toLowerCase().includes(searchTerm) ||
-            app.description.toLowerCase().includes(searchTerm)
-        );
-        
-        if (filteredApps.length === 0) {
-            showSearchError(searchTerm);
-        } else {
-            renderAppsList(filteredApps);
-        }
-    });
-}
-
-// Show Search Error with Suggestions
-function showSearchError(searchTerm) {
-    // Get random suggestions (up to 3 apps that don't match the search)
-    const suggestions = allApps
-        .filter(app => 
-            !app.name.toLowerCase().includes(searchTerm) &&
-            !app.category.toLowerCase().includes(searchTerm)
-        )
-        .slice(0, 3);
-    
-    appsGrid.innerHTML = `
-        <div class="search-error">
-            <div class="error-content">
-                <h3>No apps found for "${searchTerm}"</h3>
-                <p>We couldn't find any apps matching your search.</p>
-                
-                ${suggestions.length > 0 ? `
-                    <div class="suggestions">
-                        <h4>You may like these apps:</h4>
-                        <div class="suggestion-cards">
-                            ${suggestions.map(app => `
-                                <div class="suggestion-card" onclick="selectSuggestion(${app.id})">
-                                    <img src="${app.icon_url || 'https://via.placeholder.com/40/4F46E5/FFFFFF?text=App'}" alt="${app.name}">
-                                    <div>
-                                        <h5>${app.name}</h5>
-                                        <span>${app.category}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-                
-                <button onclick="clearSearch()" class="clear-search-btn">
-                    <i class="fas fa-times"></i> Clear Search
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// Select Suggestion
-function selectSuggestion(appId) {
-    const selectedApp = allApps.find(app => app.id === appId);
-    if (selectedApp) {
-        searchInput.value = '';
-        filteredApps = [...allApps];
-        renderAppsList(filteredApps);
-        loadAppDetails(selectedApp);
-    }
-}
-
-// Clear Search
-function clearSearch() {
-    searchInput.value = '';
-    filteredApps = [...allApps];
-    renderAppsList(filteredApps);
 }
 
 // Load App Details
