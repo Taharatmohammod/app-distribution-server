@@ -10,10 +10,16 @@ const searchInput = document.getElementById('searchInput');
 const appsGrid = document.getElementById('appsGrid');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
+const sliderTrack = document.getElementById('sliderTrack');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const sliderIndicators = document.getElementById('sliderIndicators');
 
 // Global variables
 let allApps = [];
 let filteredApps = [];
+let currentSlide = 0;
+let slideInterval;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
@@ -24,6 +30,7 @@ async function initializeApp() {
     // Set up event listeners
     setupTabNavigation();
     setupSearch();
+    setupHeroSlider();
     
     // Load apps from Supabase
     await loadAppsFromSupabase();
@@ -53,6 +60,9 @@ async function loadAppsFromSupabase() {
             // Load first app details
             loadAppDetails(allApps[0]);
         }
+        
+        // Update hero slider with new apps
+        createHeroSlides();
         
     } catch (error) {
         console.error('Error loading apps:', error);
@@ -461,6 +471,178 @@ function formatDate(dateString) {
 function generateQRCode(downloadUrl) {
     if (!downloadUrl) return 'https://via.placeholder.com/150/000000/FFFFFF?text=QR';
     return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(downloadUrl)}`;
+}
+
+// Hero Slider Functions
+function setupHeroSlider() {
+    // Create hero slides from featured apps
+    createHeroSlides();
+    
+    // Set up navigation
+    prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+    nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+    
+    // Auto-advance slides
+    startAutoSlide();
+}
+
+function createHeroSlides() {
+    // Create slides from the first 3 apps (or create default slides if no apps)
+    const slides = allApps.length > 0 ? allApps.slice(0, 3) : createDefaultSlides();
+    
+    sliderTrack.innerHTML = slides.map((slide, index) => `
+        <div class="slider-slide" data-slide="${index}">
+            <div class="slide-content">
+                <h2>${slide.name || slide.title}</h2>
+                <p>${slide.description || slide.subtitle}</p>
+                <div class="slide-actions">
+                    <button class="slide-btn primary" onclick="selectAppFromSlider(${slide.id || index})">
+                        <i class="fas fa-download"></i> Download Now
+                    </button>
+                    <button class="slide-btn secondary" onclick="viewAppDetails(${slide.id || index})">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </button>
+                </div>
+            </div>
+            <img src="${slide.icon_url || slide.image}" alt="${slide.name || slide.title}" class="slide-image">
+        </div>
+    `).join('');
+    
+    // Create indicators
+    createIndicators(slides.length);
+    
+    // Show first slide
+    goToSlide(0);
+}
+
+function createDefaultSlides() {
+    return [
+        {
+            title: "Welcome to TMS App Store",
+            subtitle: "Discover amazing apps and download them instantly",
+            image: "https://via.placeholder.com/200x200/4F46E5/FFFFFF?text=TMS",
+            id: 0
+        },
+        {
+            title: "Easy App Distribution",
+            subtitle: "Upload and share your apps with the world",
+            image: "https://via.placeholder.com/200x200/10B981/FFFFFF?text=Apps",
+            id: 1
+        },
+        {
+            title: "Secure Downloads",
+            subtitle: "All apps are verified and safe to download",
+            image: "https://via.placeholder.com/200x200/F59E0B/FFFFFF?text=Secure",
+            id: 2
+        }
+    ];
+}
+
+function createIndicators(count) {
+    sliderIndicators.innerHTML = Array.from({ length: count }, (_, i) => `
+        <div class="indicator ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>
+    `).join('');
+}
+
+function goToSlide(index) {
+    const slides = document.querySelectorAll('.slider-slide');
+    const indicators = document.querySelectorAll('.indicator');
+    
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
+    
+    currentSlide = index;
+    
+    // Update slider position
+    sliderTrack.style.transform = `translateX(-${index * 100}%)`;
+    
+    // Update indicators
+    indicators.forEach((indicator, i) => {
+        indicator.classList.toggle('active', i === index);
+    });
+    
+    // Update navigation buttons
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === slides.length - 1;
+}
+
+function startAutoSlide() {
+    slideInterval = setInterval(() => {
+        goToSlide(currentSlide + 1);
+    }, 5000); // Change slide every 5 seconds
+}
+
+function stopAutoSlide() {
+    clearInterval(slideInterval);
+}
+
+function selectAppFromSlider(appId) {
+    // Find the app and select it in the main list
+    const app = allApps.find(app => app.id === appId);
+    if (app) {
+        // Scroll to main content and select the app
+        document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            const appCard = document.querySelector(`[data-app-id="${appId}"]`);
+            if (appCard) {
+                appCard.click();
+            }
+        }, 1000);
+    }
+}
+
+function viewAppDetails(appId) {
+    selectAppFromSlider(appId);
+}
+
+// Enhanced Tab Navigation with Animations
+function setupTabNavigation() {
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remove active class from all buttons and panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanels.forEach(panel => panel.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding panel
+            this.classList.add('active');
+            const targetPanel = document.getElementById(targetTab);
+            targetPanel.classList.add('active');
+            
+            // Add animation to the new panel
+            targetPanel.style.animation = 'tabSlide 0.3s ease-out';
+            setTimeout(() => {
+                targetPanel.style.animation = '';
+            }, 300);
+        });
+    });
+}
+
+// Enhanced App Selection with Animations
+function setupAppSelection() {
+    const appCards = document.querySelectorAll('.app-card');
+    
+    appCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const appId = parseInt(this.getAttribute('data-app-id'));
+            const selectedApp = allApps.find(app => app.id === appId);
+            
+            if (selectedApp) {
+                // Update active card with animation
+                appCards.forEach(c => {
+                    c.classList.remove('active');
+                    c.style.animation = '';
+                });
+                
+                this.classList.add('active');
+                this.style.animation = 'pulse 0.5s ease-out';
+                
+                // Load app details with fade animation
+                loadAppDetails(selectedApp);
+            }
+        });
+    });
 }
 
 // Auto-refresh apps every 30 seconds to catch new uploads
