@@ -357,15 +357,16 @@ function updateScreenshotsTab(app) {
 // Update Changelog Tab
 function updateChangelogTab(app) {
     const changelogPanel = document.getElementById('changelog');
-    
-    if (app.changelog && app.changelog.length > 0) {
+    // Ensure changelog is an array
+    const changelog = Array.isArray(app.changelog) ? app.changelog : [];
+    if (changelog.length > 0) {
         changelogPanel.innerHTML = `
             <div class="changelog">
-                ${app.changelog.map(version => `
+                ${changelog.map(version => `
                     <div class="version-entry">
                         <h3>Version ${version.version} (${formatDate(version.date)})</h3>
                         <ul>
-                            ${version.changes.map(change => `<li>${change}</li>`).join('')}
+                            ${(Array.isArray(version.changes) ? version.changes : []).map(change => `<li>${change}</li>`).join('')}
                         </ul>
                     </div>
                 `).join('')}
