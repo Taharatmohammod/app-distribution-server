@@ -443,3 +443,5 @@ function showMessage(message, type) {
         }, 5000);
     }
 }
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
