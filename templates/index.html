@@ -51,10 +51,13 @@
                 {% set app = apps[0] %}
                 <div class="app-details-header">
                     <div class="selected-app-info">
-                        <img src="https://via.placeholder.com/80/4F46E5/FFFFFF?text=App" alt="App Icon" class="selected-app-icon">
+                        <img src="{{ app.iconUrl if app.iconUrl else 'https://via.placeholder.com/80/4F46E5/FFFFFF?text=No+Icon' }}" alt="App Icon" class="selected-app-icon">
                         <div>
-                            <h2>{{ app.name }}</h2>
-                            <p>Version {{ app.version }}{% if app.category %} • {{ app.category }}{% endif %}</p>
+                            <h2>{{ app.name if app.name else 'No name available' }}</h2>
+                            <p>
+                                Version {{ app.version if app.version else 'N/A' }}
+                                {% if app.category %} • {{ app.category }}{% endif %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -71,7 +74,7 @@
                     <div class="tab-panel active" id="details">
                         <div class="app-description">
                             <h3>About this app</h3>
-                            <p>{{ app.description }}</p>
+                            <p>{{ app.description if app.description else 'No description available.' }}</p>
                         </div>
                         <div class="app-features">
                             <h3>Features</h3>
@@ -85,37 +88,35 @@
                         <div class="app-meta">
                             <div class="meta-item">
                                 <span class="label">Size:</span>
-                                <span class="value">{{ app.fileSize }}</span>
+                                <span class="value">{{ app.fileSize if app.fileSize else 'N/A' }}</span>
                             </div>
                             <div class="meta-item">
                                 <span class="label">Downloads:</span>
-                                <span class="value">{{ app.downloads }}</span>
+                                <span class="value">{{ download_counts[app.id] if download_counts and app.id in download_counts else 0 }}</span>
                             </div>
                             <div class="meta-item">
                                 <span class="label">Updated:</span>
-                                <span class="value">{{ app.uploadDate }}</span>
+                                <span class="value">{{ app.uploadDate if app.uploadDate else 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
                     <!-- Screenshots Tab -->
                     <div class="tab-panel" id="screenshots">
-                        <div class="screenshots-grid">
-                            <div class="screenshot">
-                                <img src="https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+1" alt="Screenshot 1">
+                        {% if app.screenshotUrls %}
+                            <div class="screenshots-grid">
+                                {% for url in app.screenshotUrls %}
+                                    <img src="{{ url }}" alt="Screenshot">
+                                {% endfor %}
                             </div>
-                            <div class="screenshot">
-                                <img src="https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+2" alt="Screenshot 2">
-                            </div>
-                            <div class="screenshot">
-                                <img src="https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Screenshot+3" alt="Screenshot 3">
-                            </div>
-                        </div>
+                        {% else %}
+                            <p>No screenshots available.</p>
+                        {% endif %}
                     </div>
                     <!-- Changelog Tab -->
                     <div class="tab-panel" id="changelog">
                         <div class="changelog">
                             <div class="version-entry">
-                                <h3>Version {{ app.version }} ({{ app.uploadDate }})</h3>
+                                <h3>Version {{ app.version if app.version else 'N/A' }} ({{ app.uploadDate if app.uploadDate else 'N/A' }})</h3>
                                 <ul>
                                     <li>Initial release</li>
                                 </ul>
@@ -134,7 +135,11 @@
                                     <div class="download-icon">📱</div>
                                     <h4>Direct Download</h4>
                                     <p>Download the APK file directly to your device</p>
-                                    <a href="{{ app.downloadUrl }}" class="download-btn primary">Download APK</a>
+                                    {% if app.downloadUrl %}
+                                        <a href="/download/{{ app.id }}" class="download-btn primary">Download APK</a>
+                                    {% else %}
+                                        <p style="color: #e53e3e;">Download not available.</p>
+                                    {% endif %}
                                 </div>
                                 <div class="download-card">
                                     <div class="download-icon">📱</div>
@@ -162,7 +167,12 @@
                 </div>
                 {% else %}
                 <div class="app-details-header">
-                    <h2>No apps available</h2>
+                    {% if error_message %}
+                        <h2 style="color: #e53e3e;">{{ error_message }}</h2>
+                    {% else %}
+                        <h2>No apps available</h2>
+                        <p>There are currently no apps to display. Please check back later!</p>
+                    {% endif %}
                 </div>
                 {% endif %}
             </section>
