@@ -206,18 +206,27 @@ function loadAppDetails(app) {
     updateInstallTab(app);
 }
 
-// Fetch and update download count for an app
-async function updateDownloadCount(app) {
+// Add a function to fetch APK size from Supabase Storage
+async function updateApkSize(app) {
     const detailsPanel = document.getElementById('details');
-    const { count, error } = await supabase
-        .from('downloads')
-        .select('*', { count: 'exact', head: true })
-        .eq('app_id', app.id);
-    const downloadCount = error ? 'Unknown' : formatNumber(count || 0);
-    // Update the downloads value in the details panel
-    const downloadsElem = detailsPanel.querySelector('.meta-item .label:contains("Downloads:")')?.parentElement.querySelector('.value');
-    if (downloadsElem) {
-        downloadsElem.textContent = downloadCount;
+    const sizeElem = detailsPanel.querySelector('.meta-item .label:contains("Size:")')?.parentElement.querySelector('.value');
+    try {
+        const { data, error } = await supabase.storage.from('apks').list('', { search: `${app.id}.apk` });
+        if (error || !data || !data.length) {
+            if (sizeElem) sizeElem.textContent = 'Unknown';
+            return;
+        }
+        const file = data.find(f => f.name === `${app.id}.apk`);
+        if (!file) {
+            if (sizeElem) sizeElem.textContent = 'Unknown';
+            return;
+        }
+        // Format size in MB or KB
+        let size = file.metadata.size;
+        let sizeStr = size > 1024 * 1024 ? (size / (1024 * 1024)).toFixed(2) + ' MB' : (size / 1024).toFixed(2) + ' KB';
+        if (sizeElem) sizeElem.textContent = sizeStr;
+    } catch (e) {
+        if (sizeElem) sizeElem.textContent = 'Unknown';
     }
 }
 
@@ -239,7 +248,7 @@ function updateDetailsTab(app) {
         <div class="app-meta">
             <div class="meta-item">
                 <span class="label">Size:</span>
-                <span class="value">${app.file_size || 'Unknown'}</span>
+                <span class="value">Loading...</span>
             </div>
             <div class="meta-item">
                 <span class="label">Downloads:</span>
@@ -253,6 +262,8 @@ function updateDetailsTab(app) {
     `;
     // Fetch and update the download count
     updateDownloadCount(app);
+    // Fetch and update the APK size
+    updateApkSize(app);
 }
 
 // Update Screenshots Tab
