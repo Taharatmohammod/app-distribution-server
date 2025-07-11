@@ -274,23 +274,22 @@ function clearSearch() {
 function loadAppDetails(app) {
     // Update app header
     const selectedAppInfo = document.querySelector('.selected-app-info');
+    const appName = app.name || 'App name not available';
+    const appVersion = app.version || 'Unknown version';
+    const appCategory = app.category || 'Category not available';
     selectedAppInfo.innerHTML = `
-        <img src="${app.icon_url || 'https://via.placeholder.com/80/4F46E5/FFFFFF?text=App'}" alt="App Icon" class="selected-app-icon">
+        <img src="${app.icon_url || 'https://via.placeholder.com/80/4F46E5/FFFFFF?text=No+Icon'}" alt="App Icon" class="selected-app-icon">
         <div>
-            <h2>${app.name}</h2>
-            <p>Version ${app.version} • ${app.category}</p>
+            <h2>${appName}</h2>
+            <p>Version ${appVersion} • ${appCategory}</p>
         </div>
     `;
-    
     // Update Details tab
     updateDetailsTab(app);
-    
     // Update Screenshots tab
     updateScreenshotsTab(app);
-    
     // Update Changelog tab
     updateChangelogTab(app);
-    
     // Update Install tab
     updateInstallTab(app);
 }
@@ -298,21 +297,18 @@ function loadAppDetails(app) {
 // Update Details Tab
 function updateDetailsTab(app) {
     const detailsPanel = document.getElementById('details');
-    
+    const appName = app.name || 'App name not available';
     detailsPanel.innerHTML = `
         <div class="app-description">
             <h3>About this app</h3>
-            <p>${app.description || 'No description available.'}</p>
+            <p>${app.description || `No description available for <b>${appName}</b>.`}</p>
         </div>
-        
         <div class="app-features">
             <h3>Features</h3>
             <ul>
-                ${(app.features || []).map(feature => `<li>${feature}</li>`).join('')}
-                ${(app.features || []).length === 0 ? '<li>Features will be added soon</li>' : ''}
+                ${(Array.isArray(app.features) && app.features.length > 0) ? app.features.map(feature => `<li>${feature}</li>`).join('') : `<li>Features will be added soon for <b>${appName}</b></li>`}
             </ul>
         </div>
-        
         <div class="app-meta">
             <div class="meta-item">
                 <span class="label">Size:</span>
@@ -333,8 +329,8 @@ function updateDetailsTab(app) {
 // Update Screenshots Tab
 function updateScreenshotsTab(app) {
     const screenshotsPanel = document.getElementById('screenshots');
-    
-    if (app.screenshots && app.screenshots.length > 0) {
+    const appName = app.name || 'this app';
+    if (Array.isArray(app.screenshots) && app.screenshots.length > 0) {
         screenshotsPanel.innerHTML = `
             <div class="screenshots-grid">
                 ${app.screenshots.map(screenshot => `
@@ -347,8 +343,9 @@ function updateScreenshotsTab(app) {
     } else {
         screenshotsPanel.innerHTML = `
             <div class="no-screenshots">
+                <img src="https://via.placeholder.com/300x600/cccccc/000000?text=No+Screenshot" alt="No Screenshot">
                 <h3>No Screenshots Available</h3>
-                <p>Screenshots will be added soon.</p>
+                <p>No screenshots available for <b>${appName}</b>.</p>
             </div>
         `;
     }
