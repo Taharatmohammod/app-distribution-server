@@ -5,6 +5,10 @@ import json
 from datetime import datetime
 import mimetypes
 from supabase import create_client, Client
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -34,21 +38,42 @@ def get_file_size_mb(file_path):
 
 @app.route('/')
 def index():
-    response = supabase.table('apps').select('*').execute()
-    apps = response.data
-    return render_template('index.html', apps=apps)
+    try:
+        response = supabase.table('apps').select('*').execute()
+        apps = response.data
+        # Get download counts for each app
+        download_counts = {}
+        for app in apps:
+            try:
+                count_resp = supabase.table('downloads').select('id').eq('app_id', app['id']).execute()
+                download_counts[app['id']] = len(count_resp.data) if hasattr(count_resp, 'data') else 0
+            except Exception as e:
+                logging.error(f"Error fetching download count for app {app['id']}: {e}")
+                download_counts[app['id']] = 0
+        return render_template('index.html', apps=apps, download_counts=download_counts)
+    except Exception as e:
+        logging.error(f"Error loading main page: {e}")
+        return render_template('index.html', apps=[], download_counts={}, error_message="An error occurred while loading apps. Please try again later.")
 
 @app.route('/api/apps')
 def get_apps():
-    response = supabase.table('apps').select('*').execute()
-    return jsonify(response.data)
+    try:
+        response = supabase.table('apps').select('*').execute()
+        return jsonify(response.data)
+    except Exception as e:
+        logging.error(f"Error fetching apps: {e}")
+        return jsonify({'error': 'Failed to fetch apps'}), 500
 
 @app.route('/api/apps/<int:app_id>')
 def get_app(app_id):
-    response = supabase.table('apps').select('*').eq('id', app_id).execute()
-    if not response.data:
-        return jsonify({'error': 'App not found'}), 404
-    return jsonify(response.data[0])
+    try:
+        response = supabase.table('apps').select('*').eq('id', app_id).execute()
+        if not response.data:
+            return jsonify({'error': 'App not found'}), 404
+        return jsonify(response.data[0])
+    except Exception as e:
+        logging.error(f"Error fetching app {app_id}: {e}")
+        return jsonify({'error': 'Failed to fetch app'}), 500
 
 @app.route('/api/apps', methods=['POST'])
 def upload_app():
@@ -89,27 +114,55 @@ def upload_app():
         return jsonify(insert_response.data[0]), 201
         
     except Exception as e:
+        logging.error(f"Error uploading app: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/download/<int:app_id>')
+def download_and_log(app_id):
+    try:
+        # Get app info
+        response = supabase.table('apps').select('*').eq('id', app_id).execute()
+        if not response.data:
+            return 'App not found', 404
+        app = response.data[0]
+        # Log the download
+        try:
+            supabase.table('downloads').insert({'app_id': app_id}).execute()
+        except Exception as e:
+            logging.error(f"Error logging download for app {app_id}: {e}")
+        # Redirect to the Supabase Storage URL
+        return redirect(app['downloadUrl'])
+    except Exception as e:
+        logging.error(f"Error handling download for app {app_id}: {e}")
+        return 'An error occurred while processing your download. Please try again later.', 500
 
 @app.route('/downloads/<filename>')
 def download_file(filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    if not os.path.exists(file_path):
-        return jsonify({'error': 'File not found'}), 404
-    
-    # Update download count in Supabase
-    response = supabase.table('apps').select('*').eq('downloadUrl', f'/downloads/{filename}').execute()
-    if response.data:
-        app_id = response.data[0]['id']
-        current_downloads = response.data[0].get('downloads', 0)
-        supabase.table('apps').update({'downloads': current_downloads + 1}).eq('id', app_id).execute()
-    
-    return send_file(file_path, as_attachment=True)
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        # Update download count in Supabase
+        response = supabase.table('apps').select('*').eq('downloadUrl', f'/downloads/{filename}').execute()
+        if response.data:
+            app_id = response.data[0]['id']
+            current_downloads = response.data[0].get('downloads', 0)
+            supabase.table('apps').update({'downloads': current_downloads + 1}).eq('id', app_id).execute()
+        
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        logging.error(f"Error serving file {filename}: {e}")
+        return jsonify({'error': 'Failed to serve file'}), 500
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    try:
+        return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    except Exception as e:
+        logging.error(f"Error serving uploaded file {filename}: {e}")
+        return jsonify({'error': 'Failed to serve uploaded file'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
